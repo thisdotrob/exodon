@@ -2,12 +2,15 @@ package starling
 
 import (
 	"context"
+	"database/sql"
 	"encoding/json"
 	"fmt"
 	"io/ioutil"
 	"log"
 	"net/http"
 	"os"
+
+	_ "github.com/lib/pq"
 )
 
 type PubSubMessage struct {
@@ -119,6 +122,27 @@ func SyncStarling(ctx context.Context, m PubSubMessage) error {
 	}
 
 	fmt.Println(transactions.Feed_items[0])
+
+	var (
+		host     = os.Getenv("EXODON_PG_HOST")
+		port     = os.Getenv("EXODON_PG_PORT")
+		user     = os.Getenv("EXODON_PG_USER")
+		password = os.Getenv("EXODON_PG_PASSWORD")
+		dbname   = os.Getenv("EXODON_PG_DBNAME")
+	)
+
+	psqlInfo := fmt.Sprintf("host=%s port=%s user=%s password=%s dbname=%s sslmode=disable",
+		host, port, user, password, dbname)
+
+	db, err := sql.Open("postgres", psqlInfo)
+	if err != nil {
+		panic(err)
+	}
+	defer db.Close()
+	err = db.Ping()
+	if err != nil {
+		panic(err)
+	}
 
 	return nil
 }
