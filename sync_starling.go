@@ -1,4 +1,4 @@
-package starling
+package main
 
 import (
 	"context"
@@ -263,4 +263,11 @@ func SyncStarling(ctx context.Context, m PubSubMessage) error {
 	}
 
 	return nil
+}
+
+func main() {
+	m := PubSubMessage{
+		Data: []byte(""),
+	}
+	SyncStarling(context.Background(), m)
 }

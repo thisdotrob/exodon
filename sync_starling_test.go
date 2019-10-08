@@ -1,11 +1,11 @@
-package starling
+package main
 
 import (
 	"context"
 	"testing"
 )
 
-func TestSyncStarling(t *testing.T) {
+func Test(t *testing.T) {
 	m := PubSubMessage{
 		Data: []byte(""),
 	}
