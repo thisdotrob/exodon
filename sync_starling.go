@@ -18,6 +18,112 @@ type PubSubMessage struct {
 	Data []byte `json:"data"`
 }
 
+type Amount struct {
+	Currency   string
+	MinorUnits int
+}
+
+type Transaction struct {
+	FeedItemUid                        string
+	CategoryUid                        string
+	Amount                             Amount
+	SourceAmount                       Amount
+	Direction                          string
+	UpdatedAt                          string
+	TransactionTime                    string
+	Source                             string
+	Status                             string
+	CounterPartyType                   string
+	CounterPartyName                   string
+	Country                            string
+	SpendingCategory                   string
+	SettlementTime                     *string
+	SourceSubType                      *string
+	CounterPartyUid                    *string
+	CounterPartySubEntityUid           *string
+	CounterPartySubEntityName          *string
+	CounterPartySubEntityIdentifier    *string
+	CounterPartySubEntitySubIdentifier *string
+	Reference                          *string
+	UserNote                           *string
+}
+
+type Transactions struct {
+	FeedItems []Transaction
+}
+
+func (t *Transaction) String() string {
+	var settlementTimeOut string
+	settlementTimeOut = "<nil>"
+	if t.SettlementTime != nil {
+		settlementTimeOut = *t.SettlementTime
+	}
+	var sourceSubTypeOut string
+	sourceSubTypeOut = "<nil>"
+	if t.SourceSubType != nil {
+		sourceSubTypeOut = *t.SourceSubType
+	}
+	var counterPartyUidOut string
+	counterPartyUidOut = "<nil>"
+	if t.CounterPartyUid != nil {
+		counterPartyUidOut = *t.CounterPartyUid
+	}
+	var counterPartySubEntityUidOut string
+	counterPartySubEntityUidOut = "<nil>"
+	if t.CounterPartySubEntityUid != nil {
+		counterPartySubEntityUidOut = *t.CounterPartySubEntityUid
+	}
+	var counterPartySubEntityNameOut string
+	counterPartySubEntityNameOut = "<nil>"
+	if t.CounterPartySubEntityName != nil {
+		counterPartySubEntityNameOut = *t.CounterPartySubEntityName
+	}
+	var counterPartySubEntityIdentifierOut string
+	counterPartySubEntityIdentifierOut = "<nil>"
+	if t.CounterPartySubEntityIdentifier != nil {
+		counterPartySubEntityIdentifierOut = *t.CounterPartySubEntityIdentifier
+	}
+	var counterPartySubEntitySubIdentifierOut string
+	counterPartySubEntitySubIdentifierOut = "<nil>"
+	if t.CounterPartySubEntitySubIdentifier != nil {
+		counterPartySubEntitySubIdentifierOut = *t.CounterPartySubEntitySubIdentifier
+	}
+	var referenceOut string
+	referenceOut = "<nil>"
+	if t.Reference != nil {
+		referenceOut = *t.Reference
+	}
+	var userNoteOut string
+	userNoteOut = "<nil>"
+	if t.UserNote != nil {
+		userNoteOut = *t.UserNote
+	}
+
+	return fmt.Sprintf("FeedItemUid: '%v'\nCategoryUid: '%v'\nAmount: '%v'\nSourceAmount: '%v'\nDirection: '%v'\nUpdatedAt: '%v'\nTransactionTime: '%v'\nSource: '%v'\nStatus: '%v'\nCounterPartyType: '%v'\nCounterPartyName: '%v'\nCountry: '%v'\nSpendingCategory: '%v'\nSettlementTime: '%v'\nSourceSubType: '%v'\nCounterPartyUid: '%v'\nCounterPartySubEntityUid: '%v'\nCounterPartySubEntityName: '%v'\nCounterPartySubEntityIdentifier: '%v'\nCounterPartySubEntitySubIdentifier: '%v'\nReference: '%v'\nUserNote: '%v'\n",
+		t.FeedItemUid,
+		t.CategoryUid,
+		t.Amount,
+		t.SourceAmount,
+		t.Direction,
+		t.UpdatedAt,
+		t.TransactionTime,
+		t.Source,
+		t.Status,
+		t.CounterPartyType,
+		t.CounterPartyName,
+		t.Country,
+		t.SpendingCategory,
+		settlementTimeOut,
+		sourceSubTypeOut,
+		counterPartyUidOut,
+		counterPartySubEntityUidOut,
+		counterPartySubEntityNameOut,
+		counterPartySubEntityIdentifierOut,
+		counterPartySubEntitySubIdentifierOut,
+		referenceOut,
+		userNoteOut)
+}
+
 func SyncStarling(ctx context.Context, m PubSubMessage) error {
 	var (
 		host     = os.Getenv("EXODON_PG_HOST")
@@ -134,40 +240,6 @@ func SyncStarling(ctx context.Context, m PubSubMessage) error {
 		panic(transactions_file_err)
 	}
 
-	type Amount struct {
-		Currency    string `json:"currency"`
-		Minor_units int    `json:"minorUnits"`
-	}
-
-	type Transaction struct {
-		Feed_item_uid                           string  `json:"feedItemUid"`
-		Category_uid                            string  `json:"categoryUid"`
-		Amount                                  Amount  `json:"amount"`
-		Source_amount                           Amount  `json:"sourceAmount"`
-		Direction                               string  `json:"direction"`
-		Updated_at                              string  `json:"updatedAt"`
-		Transaction_time                        string  `json:"transactionTime"`
-		Settlement_time                         *string `json:"settlementTime"`
-		Source                                  string  `json:"source"`
-		Source_sub_type                         *string `json:"sourceSubType"`
-		Status                                  string  `json:"status"`
-		Counter_party_type                      string  `json:"counterPartyType"`
-		Counter_party_uid                       *string `json:"counterPartyUid"`
-		Counter_party_name                      string  `json:"counterPartyName"`
-		Counter_party_sub_entity_uid            *string `json:"counterPartySubEntityUid"`
-		Counter_party_sub_entity_name           *string `json:"counterPartySubEntityName"`
-		Counter_party_sub_entity_identifier     *string `json:"counterPartySubEntityIdentifier"`
-		Counter_party_sub_entity_sub_identifier *string `json:"counterPartySubEntitySubIdentifier"`
-		Reference                               *string `json:"reference"`
-		Country                                 string  `json:"country"`
-		Spending_category                       string  `json:"spendingCategory"`
-		User_note                               *string `json:"userNote"`
-	}
-
-	type Transactions struct {
-		Feed_items []Transaction `json:"feedItems"`
-	}
-
 	var transactions Transactions
 
 	if err := json.Unmarshal(transactions_body, &transactions); err != nil {
@@ -228,36 +300,39 @@ func SyncStarling(ctx context.Context, m PubSubMessage) error {
 		spending_category = $23,
 		user_note = $24`
 
-	for _, t := range transactions.Feed_items {
+	for _, t := range transactions.FeedItems {
+		if *t.Reference == "" {
+			t.Reference = nil
+		}
 		_, err = db.Exec(sqlStatement,
-			t.Feed_item_uid,
-			t.Category_uid,
+			t.FeedItemUid,
+			t.CategoryUid,
 			t.Amount.Currency,
-			t.Amount.Minor_units,
-			t.Source_amount.Currency,
-			t.Source_amount.Minor_units,
+			t.Amount.MinorUnits,
+			t.SourceAmount.Currency,
+			t.SourceAmount.MinorUnits,
 			t.Direction,
-			t.Updated_at,
-			t.Transaction_time,
-			t.Settlement_time,
+			t.UpdatedAt,
+			t.TransactionTime,
+			t.SettlementTime,
 			t.Source,
-			t.Source_sub_type,
+			t.SourceSubType,
 			t.Status,
-			t.Counter_party_type,
-			t.Counter_party_uid,
-			t.Counter_party_name,
-			t.Counter_party_sub_entity_uid,
-			t.Counter_party_sub_entity_name,
-			t.Counter_party_sub_entity_identifier,
-			t.Counter_party_sub_entity_sub_identifier,
+			t.CounterPartyType,
+			t.CounterPartyUid,
+			t.CounterPartyName,
+			t.CounterPartySubEntityUid,
+			t.CounterPartySubEntityName,
+			t.CounterPartySubEntityIdentifier,
+			t.CounterPartySubEntitySubIdentifier,
 			t.Reference,
 			t.Country,
-			t.Spending_category,
-			t.User_note,
+			t.SpendingCategory,
+			t.UserNote,
 		)
 
 		if err != nil {
-			fmt.Printf("%+v\n", t)
+			fmt.Println(&t)
 			panic(err)
 		}
 	}
