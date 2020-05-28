@@ -1,3 +1,9 @@
+CREATE USER exodon PASSWORD 'changemeeeee';
+
+CREATE DATABASE finances;
+
+\c finances
+
 DROP TABLE IF EXISTS starling_transactions;
 
 CREATE TABLE IF NOT EXISTS starling_transactions (
@@ -26,3 +32,6 @@ CREATE TABLE IF NOT EXISTS starling_transactions (
        spending_category TEXT NOT NULL CHECK (spending_category <> ''),
        user_note TEXT
 );
+
+GRANT SELECT, UPDATE, INSERT ON ALL TABLES IN SCHEMA public TO exodon;
+GRANT UPDATE ON ALL SEQUENCES IN SCHEMA public TO exodon;
