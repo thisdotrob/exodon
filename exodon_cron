@@ -1,0 +1,12 @@
+#!/bin/bash
+
+export STARLING_TOKEN="CHANGEME"
+export EXODON_PG_HOST="CHANGEME"
+export EXODON_PG_PORT="CHANGEME"
+export EXODON_PG_USER="CHANGEME"
+export EXODON_PG_PASSWORD="CHANGEME"
+export EXODON_PG_DBNAME="CHANGEME"
+
+export USERNAME="ubuntu"
+
+/home/$USERNAME/go/bin/exodon >> /home/$USERNAME/exodon.log 2>&1
