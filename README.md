@@ -1,8 +1,13 @@
 # EXODON
 
-A Go package intended to be deployed as a cloud function on GCP.
+A Go package for syncing Starling transactions to Postgres.
 
 ## Usage
+
+Install:
+```
+go install github.com/thisdotrob/exodon
+```
 
 Set the following:
 `STARLING_TOKEN`.
@@ -12,4 +17,7 @@ Set the following:
 `EXODON_PG_PASSWORD`
 `EXODON_PG_DBNAME`
 
-Run `go test` (if running outside of GCP).
+Run it:
+```
+~/go/bin/exodon
+```
